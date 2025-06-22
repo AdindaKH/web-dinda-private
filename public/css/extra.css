@@ -1,0 +1,29 @@
+.filter-x {
+    display: flex; 
+    justify-content:end; 
+    align-items: center; 
+}
+
+.filter-f {
+    display: flex; 
+    flex-direction: row; 
+    justify-content: center; 
+    align-items: center; 
+    flex-wrap: nowrap; 
+    margin-right: 20px;
+}
+
+.filter-ba {
+    display: flex; 
+    justify-content: space-between; 
+    margin-right: 20px;
+}
+
+.genderToggle.active {
+    pointer-events: none;
+    opacity: 1 !important;
+}
+
+.genderToggle:not(.active) {
+    opacity: 0.6;
+}
