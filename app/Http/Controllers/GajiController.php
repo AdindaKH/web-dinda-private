@@ -198,7 +198,6 @@ class GajiController extends Controller
         return redirect()->route('gaji.kloter')->with('success', 'Kloter berhasil diselesaikan dan transaksi gaji dicatat.');
     }
 
-
     public function export($id)
     {
         $kloter = \App\Models\Kloter::with('tonIkan')->findOrFail($id);

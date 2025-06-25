@@ -60,27 +60,19 @@
             @foreach($data as $i => $trx)
                 <tr>
                     <td>{{ $i + 1 }}</td>
-                    <td>{{ \Carbon\Carbon::parse($trx['waktu'])->format('d-m-Y H:i') }}</td>
-                    <td>{{ $trx['kode_transaksi'] }}</td>
-                    <td>{{ $trx['kode_barang'] }}</td>
-                    <td>{{ $trx['supplier'] }}</td>
-                    <td>{{ $trx['nama_barang'] }}</td>
-                    <td>{{ $trx['qty'] }}</td>
-                    <td>Rp {{ number_format($trx['masuk'], 0, ',', '.') }}</td>
-                    <td>Rp {{ number_format($trx['keluar'], 0, ',', '.') }}</td>
-                    <td>Rp {{ number_format($trx['total'], 0, ',', '.') }}</td>
+                    <td>{{ \Carbon\Carbon::parse($trx['Waktu'])->format('d-m-Y H:i') }}</td>
+                    <td>{{ $trx['Kode Transaksi'] }}</td>
+                    <td>{{ $trx['Kode Barang'] }}</td>
+                    <td>{{ $trx['Supplier'] }}</td>
+                    <td>{{ $trx['Nama Barang'] }}</td>
+                    <td>{{ $trx['Qty'] }}</td>
+                    <td>Rp {{ number_format($trx['Masuk'], 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format($trx['Keluar'], 0, ',', '.') }}</td>
+                    <td>Rp {{ number_format($trx['Total'], 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         </tbody>
     </table>
-    
-    @foreach($data as $i => $trx)
-    <p>
-        @if($loop->last)
-            Transaksi terakhir dilakukan pada tanggal {{ \Carbon\Carbon::parse($trx['waktu'])->format('d-m-Y H:i') }} sebanyak Rp {{ number_format($trx['total'], 0, ',', '.') }}.
-        @endif
-    </p>
-    @endforeach
 
     <br><br>
     <div style="text-align: right;">

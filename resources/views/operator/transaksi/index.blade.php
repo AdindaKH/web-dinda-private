@@ -20,6 +20,10 @@
             <input type="hidden" name="tanggal_akhir" value="{{ request('tanggal_akhir') }}">
             <input type="hidden" name="q" id="exportSearchQuery">
             <button type="submit" class="btn btn-success btn-sm mb-3">Export Excel</button>
+            <button type="button" class="btn btn-danger btn-sm mb-3" onclick="window.open('{{ route('operator.transaksi.export_pdf', ['tanggal_mulai' => request('tanggal_mulai'), 'tanggal_akhir' => request('tanggal_akhir'), 'q' => request('q')]) }}', '_blank')">
+                Export PDF
+            </button>
+
         </form>
     </div>
 
@@ -43,7 +47,10 @@
             <tbody>
                 @foreach($data as $i => $trx)
                 <tr>
+                    {{-- gunakan kode dibawah jika ingin urutan nomer dimuali dari 1 --}}
                     <td class="p-2">{{ $i + 1 }}</td>
+                    {{-- gunakan kode dibasah jika ingin urutan nomer terbalik --}}
+                    {{-- <td class="p-2">{{ count($data) - $i }}</td> --}}
                     <td class="p-2">{{ \Carbon\Carbon::parse($trx['waktu_transaksi'])->format('d-m-Y H:i') }}</td>
                     <td class="p-2">{{ $trx['kode_transaksi'] }}</td>
                     <td class="p-2">{{ $trx['kode_barang'] }}</td>
@@ -57,7 +64,7 @@
                         <!-- Tombol Edit -->
                         <button 
                             type="button"
-                            class="btn btn-primary btn-edit" 
+                            class="btn btn-primary btn-edit btn-sm" 
                             data-bs-toggle="modal" 
                             data-bs-target="#editModal"
                             data-id="{{ $trx['id'] }}"

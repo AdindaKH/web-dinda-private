@@ -127,4 +127,51 @@ document.querySelectorAll('.formPresensi').forEach(form => {
     });
 });
 
+document.addEventListener('DOMContentLoaded', function () {
+    function handleJamEdit(selector, route, jamKey, errorMsg) {
+        document.querySelectorAll(selector).forEach(input => {
+            input.addEventListener('change', function () {
+                const id = this.dataset.id;
+                const jam = this.value;
+                const savedMsg = this.nextElementSibling;
+
+                fetch(route, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': window.presensiConfig.csrfToken
+                    },
+                    body: JSON.stringify({
+                        id: id,
+                        [jamKey]: jam
+                    })
+                })
+                .then(response => response.json())
+                .then(() => {
+                    if (savedMsg) {
+                        savedMsg.classList.remove('d-none');
+                        setTimeout(() => savedMsg.classList.add('d-none'), 1500);
+                    }
+                })
+                .catch(error => {
+                    alert(errorMsg);
+                    console.error(error);
+                });
+            });
+        });
+    }
+
+    handleJamEdit(
+        '.input-edit-jam-masuk',
+        window.presensiConfig.routeUpdateJamMasuk,
+        'jam_masuk',
+        "Gagal menyimpan jam masuk."
+    );
+    handleJamEdit(
+        '.input-edit-jam-pulang',
+        window.presensiConfig.routeUpdateJamPulang,
+        'jam_pulang',
+        "Gagal menyimpan jam pulang."
+    );
+});
 

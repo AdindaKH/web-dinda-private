@@ -28,7 +28,8 @@ class LaporanController extends Controller
         $filter = $request->query('filter');
         $nama = $request->query('nama');
         $isAjax = $request->ajax();
-        $isExport = $request->query('export') === 'excel';
+        $isExportExcel = $request->query('export') === 'excel';
+        $isExportPdf = $request->query('export') === 'pdf';
 
         $barangs = Barang::with(['produk', 'pendukung']);
 
@@ -50,8 +51,18 @@ class LaporanController extends Controller
             }
         })->values();
 
-        if ($isExport) {
+        if ($isExportExcel) {
             return Excel::download(new LaporanBarangExport($barangs), 'laporan-barang.xlsx');
+        }
+
+        if ($isExportPdf) {
+            $pdf = PDF::loadView('pimpinan.laporan_barang.pdf', [
+                'barangs' => $barangs,
+                'filter' => $filter,
+                'nama' => $nama
+            ])->setPaper('a4', 'landscape');
+
+            return $pdf->download('laporan-barang.pdf');
         }
 
         if ($isAjax) {
@@ -201,6 +212,17 @@ class LaporanController extends Controller
             return Excel::download(new LaporanKaryawanExport($data), 'laporan_karyawan.xlsx');
         }
 
+        if ($request->has('export') && $request->export === 'pdf') {
+            $pdf = Pdf::loadView('pimpinan.laporan_karyawan.pdf', [
+                'data' => $data,
+                'filter' => $filter,
+                'nama' => $nama
+            ])->setPaper('a4', 'landscape');
+
+            return $pdf->download('laporan_karyawan.pdf');
+        }
+
+
         return view('pimpinan.laporan_karyawan.index', compact('data', 'filter', 'nama'));
     }
 
@@ -215,7 +237,6 @@ class LaporanController extends Controller
             });
         }
 
-
         if ($request->filled('kategori')) {
             if ($request->kategori === 'pemasok') {
                 $query->whereHas('pemasok');
@@ -228,6 +249,16 @@ class LaporanController extends Controller
 
         if ($request->has('export') && $request->export === 'excel') {
             return Excel::download(new LaporanSupplierExport($suppliers), 'laporan_supplier.xlsx');
+        }
+        
+        if ($request->has('export') && $request->export === 'pdf') {
+            $pdf = Pdf::loadView('pimpinan.laporan_supplier.pdf', [
+                'suppliers' => $suppliers,
+                'kategori' => $request->kategori,
+                'keyword' => $request->keyword
+            ])->setPaper('a4', 'landscape');
+
+            return $pdf->download('laporan_supplier.pdf');
         }
 
         if ($request->ajax()) {
@@ -267,10 +298,18 @@ class LaporanController extends Controller
         }
 
         // Filter tanggal jika ada input
-        if ($request->filled('tanggal_mulai') && $request->filled('tanggal_akhir')) {
+        $tanggalMulai = null;
+        $tanggalAkhir = null;
+        if ($request->filled('daterange')) {
+            [$tanggalMulai, $tanggalAkhir] = explode(' - ', $request->daterange);
+
+            // Ubah ke format YYYY-MM-DD
+            $tanggalMulai = Carbon::createFromFormat('d-m-Y', trim($tanggalMulai))->format('Y-m-d');
+            $tanggalAkhir = Carbon::createFromFormat('d-m-Y', trim($tanggalAkhir))->format('Y-m-d');
+
             $query->whereBetween('waktu_transaksi', [
-                $request->tanggal_mulai . ' 00:00:00',
-                $request->tanggal_akhir . ' 23:59:59'
+                $tanggalMulai . ' 00:00:00',
+                $tanggalAkhir . ' 23:59:59'
             ]);
         }
 
@@ -297,13 +336,13 @@ class LaporanController extends Controller
                 'keluar' => $keluar,
                 'total' => $totalSekarang,
             ];
-        })->reverse()->values();
+        })->values();
 
         if ($request->has('export')) {
             if ($request->export === 'excel') {
                 return Excel::download(new LaporanTransaksiExport(
-                    $request->tanggal_mulai,
-                    $request->tanggal_akhir,
+                    $tanggalMulai,
+                    $tanggalAkhir,
                     $request->q
                 ), 'laporan_transaksi.xlsx');
             }
@@ -317,10 +356,10 @@ class LaporanController extends Controller
         }
         
         if ($request->ajax()) {
-            return view('pimpinan.laporan_transaksi._table', compact('data'));
+            return view('pimpinan.laporan_transaksi._table', compact('data'))->render();
         }
 
-        return view('pimpinan.laporan_transaksi.index', compact('data'));
+        return view('pimpinan.laporan_transaksi.index', compact('data', 'tanggalMulai', 'tanggalAkhir'));
     }
 
 }

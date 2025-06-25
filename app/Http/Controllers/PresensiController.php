@@ -158,4 +158,32 @@ class PresensiController extends Controller
             ->with('success', 'Karyawan berhasil dipilih untuk kloter ini.');
     }
 
+    public function updateJamMasukAjax(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:presensis,id',
+            'jam_masuk' => 'required|date_format:H:i',
+        ]);
+
+        $presensi = Presensi::find($request->id);
+        $presensi->jam_masuk = $request->jam_masuk;
+        $presensi->save();
+
+        return response()->json(['message' => 'Berhasil disimpan']);
+    }
+
+    public function updateJamPulangAjax(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:presensis,id',
+            'jam_pulang' => 'required|date_format:H:i',
+        ]);
+
+        $presensi = Presensi::find($request->id);
+        $presensi->jam_pulang = $request->jam_pulang;
+        $presensi->save();
+
+        return response()->json(['message' => 'Berhasil disimpan']);
+    }
+
 }

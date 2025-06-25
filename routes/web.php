@@ -39,8 +39,13 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Mail\TestMail;
+use Illuminate\Support\Facades\Mail;
+
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PengeluaranController;
 use App\Http\Controllers\AbsenController;
@@ -56,6 +61,14 @@ use App\Http\Controllers\DataKeuanganController;
 use App\Http\Controllers\TonIkanController;
 use App\Http\Controllers\TransaksiController;
 
+Route::get('/welcome', function () {
+    return view('welcome');
+})->name('welcome');
+
+Route::get('/tes-email', function () {
+    Mail::to('izzulhaqzaindimad@gmail.com')->send(new TestMail());
+    return 'Email dikirim!';
+});
 
 // rute untuk Auth
 Route::match(['get', 'post'], '/', function (\Illuminate\Http\Request $request) {
@@ -72,6 +85,12 @@ Route::match(['get', 'post'], '/register', function (\Illuminate\Http\Request $r
     }
     return app(RegisterController::class)->create($request);
 })->name('register');
+
+Route::get('password/forgot', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('password.email');
+
+Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+Route::post('password/reset', [ResetPasswordController::class, 'reset'])->name('password.update');
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
@@ -130,6 +149,9 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
     
     Route::post('/presensi/{id}/masuk', [PresensiController::class, 'inputMasuk'])->name('presensi.masuk');
     Route::post('/presensi/{id}/pulang', [PresensiController::class, 'inputPulang'])->name('presensi.pulang');
+
+    Route::post('/presensi/update-jam-masuk', [PresensiController::class, 'updateJamMasukAjax'])->name('presensi.updateJamMasukAjax');
+    Route::post('/presensi/update-jam-Pulang', [PresensiController::class, 'updateJamPulangAjax'])->name('presensi.updateJamPulangAjax');
     
     Route::post('/presensi/tonikan/store', [PresensiController::class, 'simpanTonIkan'])->name('presensi.tonikan.store');
     // Route::post('/presensi/tonikan/store', [PresensiController::class, 'simpanTonIkan'])->name('presensi.tonikan.store');
@@ -164,6 +186,8 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
     // export
     Route::get('/gaji/kloter/{id}/export', [GajiController::class, 'export'])->name('gaji.kloter.export');
     Route::get('operator/transaksi/export', [TransaksiController::class, 'exportExcel'])->name('operator.transaksi.export');
+    Route::get('/laporan/transaksi/export-pdf', [TransaksiController::class, 'exportPDF'])->name('operator.transaksi.export_pdf');
+
 
 // });
 

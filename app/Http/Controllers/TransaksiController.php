@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 
 use App\Exports\LaporanTransaksiExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TransaksiController extends Controller
 {
@@ -363,5 +364,24 @@ class TransaksiController extends Controller
         return Excel::download(new LaporanTransaksiExport($tanggalMulai, $tanggalAkhir, $q), $filename);
     }
 
+    public function exportPDF(Request $request)
+    {
+        $tanggalMulai = $request->tanggal_mulai;
+        $tanggalAkhir = $request->tanggal_akhir;
+        $q = $request->q;
+
+        // Ambil data transaksi dengan class export
+        $export = new LaporanTransaksiExport($tanggalMulai, $tanggalAkhir, $q);
+        $data = $export->collection(); // Ini sudah dalam format collection map
+
+        $pdf = Pdf::loadView('operator.transaksi.pdf', [
+            'data' => $data,
+            'tanggalMulai' => $tanggalMulai,
+            'tanggalAkhir' => $tanggalAkhir,
+            'q' => $q
+        ])->setPaper('a4', 'landscape');
+
+        return $pdf->download('laporan_transaksi_operator_' . now()->format('Ymd_His') . '.pdf');
+    }
 }
 

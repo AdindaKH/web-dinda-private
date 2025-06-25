@@ -23,7 +23,7 @@
         <!-- Kategori: Data -->
         <div class="sidebar-category">Data</div>
         <a href="/operator/barang" class="sidebar-link">Barang</a>
-            <div class="sidebar-submenu ms-3">
+            <div class="sidebar-submenu">
                 <a href="{{ route('barang.index', ['filter' => 'produk']) }}" class="sidebar-link">Produk</a>
                 <a href="{{ route('barang.index', ['filter' => 'pendukung']) }}" class="sidebar-link">Pendukung</a>
             </div>

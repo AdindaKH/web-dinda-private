@@ -43,7 +43,7 @@
                     <th>Nama Pekerja</th>
                     <th>Jenis Kelamin</th>
                     @foreach ($tanggalUnik as $tanggal)
-                        <th>{{ \Carbon\Carbon::parse($tanggal)->format('d-M-y') }}</th>
+                        <th>{{ \Carbon\Carbon::parse($tanggal)->format('d-M-Y') }}</th>
                     @endforeach
                     <th>Total Jam Kerja</th>
                     <th>Gaji Per Jam</th>
@@ -52,13 +52,24 @@
             </thead>
             <tbody>
                 @foreach ($karyawanWithGaji as $data)
-                    <tr>
+                    <tr style="text-align: -webkit-center;">
                         <td>{{ $data['karyawan']->nama }}</td>
                         <td>{{ $data['karyawan']->jenis_kelamin }}</td>
                         @foreach ($tanggalUnik as $tanggal)
-                            <td>{{ number_format($data['jam_per_tanggal'][$tanggal], 2) }}</td>
+                            @php
+                                $jamFloat = $data['jam_per_tanggal'][$tanggal] ?? 0;
+                                $totalMenit = round($jamFloat * 60);
+                                $jam = floor($totalMenit / 60);
+                                $menit = $totalMenit % 60;
+                            @endphp
+                            <td>{{ $jam }} jam {{ $menit }} menit</td>
                         @endforeach
-                        <td>{{ number_format($data['total_jam'], 2) }}</td>
+                        @php
+                            $totalMenit = round($data['total_jam'] * 60);
+                            $totalJam = floor($totalMenit / 60);
+                            $totalMenit = $totalMenit % 60;
+                        @endphp
+                        <td>{{ $totalJam }} jam {{ $totalMenit }} menit</td>
                         <td>{{ number_format($data['gaji_per_jam'], 0, ',', '.') }}</td>
                         <td>{{ number_format($data['total_gaji'], 0, ',', '.') }}</td>
                     </tr>

@@ -74,7 +74,7 @@
                         $totalJam = \Carbon\Carbon::parse($p->jam_masuk)->diffInMinutes(\Carbon\Carbon::parse($p->jam_pulang)) / 60;
                     }
                 @endphp
-                <tr>
+                <tr style="text-align: -webkit-center;">
                     <td>{{ $i + 1 }}</td>
                     <td>{{ $k->nama }}</td>
                     {{-- Aksi Masuk --}}
@@ -94,7 +94,20 @@
                     </td>
 
                     {{-- Jam Masuk --}}
-                    <td>{{ $p->jam_masuk ?? '-' }}</td>
+                    <td>
+                        @if($p && $p->jam_masuk)
+                            <input 
+                                type="time" 
+                                value="{{ \Carbon\Carbon::parse($p->jam_masuk)->format('H:i') }}" 
+                                class="form-control form-control-sm input-edit-jam-masuk"
+                                data-id="{{ $p->id }}"
+                                style="width: 110px;"
+                            >
+                            <small class="text-success d-none saved-message">✓</small>
+                            @else
+                            -
+                        @endif
+                    </td>
 
                     {{-- Aksi Pulang --}}
                     <td>
@@ -115,7 +128,21 @@
                     </td>
 
                     {{-- Jam Pulang --}}
-                    <td>{{ $p->jam_pulang ?? '-' }}</td>
+                    {{-- <td>{{ $p->jam_pulang ?? '-' }}</td> --}}
+                    <td>
+                        @if($p && $p->jam_pulang)
+                            <input 
+                                type="time" 
+                                value="{{ \Carbon\Carbon::parse($p->jam_pulang)->format('H:i') }}" 
+                                class="form-control form-control-sm input-edit-jam-pulang"
+                                data-id="{{ $p->id }}"
+                                style="width: 110px;"
+                            >
+                            <small class="text-success d-none saved-message">✓</small>
+                            @else
+                            -
+                        @endif
+                    </td>
 
                     {{-- Total Jam --}}
                     <td>{{ number_format($totalJam, 2) }}</td>
@@ -146,6 +173,14 @@
             html: `{!! implode('<br>', $errors->all()) !!}`,
         });
     @endif
+</script>
+
+<script>
+    window.presensiConfig = {
+        routeUpdateJamMasuk: "{{ route('presensi.updateJamMasukAjax') }}",
+        routeUpdateJamPulang: "{{ route('presensi.updateJamPulangAjax') }}",
+        csrfToken: "{{ csrf_token() }}"
+    };
 </script>
 
 <script src="{{ asset('js/presensi.js') }}"></script>

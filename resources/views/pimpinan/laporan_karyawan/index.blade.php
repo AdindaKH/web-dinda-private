@@ -9,24 +9,26 @@
     <form id="filterForm" class="mb-4">
         {{-- @csrf --}}
         <div class="row g-2 align-items-end">
-            <div class="col-auto">
-                <label for="filter" class="form-label">Filter Tanggal:</label>
-                <select name="filter" id="filter" class="form-select">
-                    <option value="minggu_ini">Minggu Ini</option>
-                    <option value="hari_ini">Hari Ini</option>
-                    <option value="bulan_ini">Bulan Ini</option>
-                    <option value="kloter_terbaru">Kloter Terbaru</option>
-                    <option value="semua">Semua</option>
-                </select>
-            </div>
-
-            <div class="col-auto">
-                <label for="nama" class="form-label">Cari Nama:</label>
-                <input type="text" name="nama" id="nama" class="form-control" placeholder="Ketik nama...">
+            <div class="col d-flex gap-2">
+                <div class="col-auto">
+                    <label for="nama" class="form-label">Cari Nama:</label>
+                    <input type="text" name="nama" id="nama" class="form-control" placeholder="Ketik nama...">
+                </div>
+                <div class="col-auto">
+                    <label for="filter" class="form-label">Filter Tanggal:</label>
+                    <select name="filter" id="filter" class="form-select">
+                        <option value="minggu_ini">Minggu Ini</option>
+                        <option value="hari_ini">Hari Ini</option>
+                        <option value="bulan_ini">Bulan Ini</option>
+                        <option value="kloter_terbaru">Kloter Terbaru</option>
+                        <option value="semua">Semua</option>
+                    </select>
+                </div>
             </div>
 
             <div class="col-auto mt-4">
                 <a id="downloadExcel" class="btn btn-success">Unduh Excel</a>
+                <a id="downloadPDF" class="btn btn-danger">Unduh PDF</a>
             </div>
         </div>
     </form>
@@ -40,6 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const filterSelect = document.getElementById('filter');
     const namaInput = document.getElementById('nama');
     const downloadBtn = document.getElementById('downloadExcel');
+    const downloadBtnPDF = document.getElementById('downloadPDF');
     const container = document.getElementById('dataContainer');
 
     async function fetchData() {
@@ -81,6 +84,15 @@ document.addEventListener('DOMContentLoaded', function () {
             filter: filterSelect.value,
             nama: namaInput.value,
             export: 'excel'
+        });
+        window.location.href = "{{ route('laporan.karyawan') }}" + '?' + urlParams.toString();
+    });
+    downloadBtnPDF.addEventListener('click', function (e) {
+        e.preventDefault();
+        const urlParams = new URLSearchParams({
+            filter: filterSelect.value,
+            nama: namaInput.value,
+            export: 'pdf'
         });
         window.location.href = "{{ route('laporan.karyawan') }}" + '?' + urlParams.toString();
     });
