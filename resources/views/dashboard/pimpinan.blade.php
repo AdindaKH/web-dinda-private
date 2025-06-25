@@ -148,7 +148,7 @@
     const kloterChart = new Chart(ctxKloter, {
         type: 'line',
         data: {
-            labels: {!! json_encode(array_reverse($labelsKloter)) !!}, // diurut terbalik
+            labels: {!! json_encode(array_reverse($labelsKloter)) !!},
             datasets: [
                 {
                     label: 'Pendapatan',
@@ -187,7 +187,6 @@
             spanGaps: true,
             scales: {
                 y: {
-                    // type: 'logarithmic',
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
@@ -203,24 +202,68 @@
     const form = document.getElementById('date-filter-form');
     const startInput = document.getElementById('start_date');
     const endInput = document.getElementById('end_date');
+
     [startInput, endInput].forEach(input => {
         input.addEventListener('change', () => {
             const startDate = startInput.value;
             const endDate = endInput.value;
             if (startDate && endDate && startDate <= endDate) {
-                form.submit();
+                fetchChartData();
             }
         });
     });
+
     document.getElementById('kloterFilter').addEventListener('change', function () {
         const selected = this.options[this.selectedIndex];
         const start = selected.getAttribute('data-start');
         const end = selected.getAttribute('data-end');
         if (start && end) {
-            document.getElementById('start_date').value = start;
-            document.getElementById('end_date').value = end;
+            startInput.value = start;
+            endInput.value = end;
         }
-        form.submit();
+        fetchChartData();
     });
+
+    // AJAX Chart Update
+    const updateCharts = (data) => {
+        // Update Chart Tanggal
+        financeChart.data.labels = data.labels;
+        financeChart.data.datasets[0].data = data.pendapatanBulanan;
+        financeChart.data.datasets[1].data = data.pengeluaranBulanan;
+        financeChart.update();
+
+        // Update Chart Kloter
+        kloterChart.data.labels = data.labelsKloter.reverse();
+        kloterChart.data.datasets[0].data = data.pendapatanKloter.reverse();
+        kloterChart.data.datasets[1].data = data.pengeluaranKloter.reverse();
+        kloterChart.update();
+    };
+
+    const fetchChartData = () => {
+        const startDate = startInput.value;
+        const endDate = endInput.value;
+        const kloterId = document.getElementById('kloterFilter').value;
+
+        fetch("{{ route('dashboard.pimpinan.data') }}", {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                start_date: startDate,
+                end_date: endDate,
+                kloter_id: kloterId
+            })
+        })
+        .then(res => res.json())
+        .then(updateCharts)
+        .catch(err => console.error('Gagal fetch data:', err));
+    };
+
+    // Event listener input
+    startInput.addEventListener('change', fetchChartData);
+    endInput.addEventListener('change', fetchChartData);
+    document.getElementById('kloterFilter').addEventListener('change', fetchChartData);
 </script>
 @endsection

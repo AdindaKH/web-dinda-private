@@ -228,4 +228,72 @@ class DashboardController extends Controller
         }
     }
 
+    public function ajaxData(Request $request)
+    {
+        // Ambil semua logika seperti di `pimpinan()`
+        $currentYear = now()->year;
+        $start = $request->get('start_date')
+            ? Carbon::parse($request->get('start_date'))
+            : Carbon::create($currentYear, 1, 1)->startOfDay();
+        $end = $request->get('end_date')
+            ? Carbon::parse($request->get('end_date'))
+            : Carbon::create($currentYear, 12, 31)->endOfDay();
+
+        $kloterId = $request->get('kloter');
+        $labelsKloter = [];
+        $pendapatanKloter = [];
+        $pengeluaranKloter = [];
+
+        if ($kloterId) {
+            $selectedKloter = HistoryGajiKloter::find($kloterId);
+            if ($selectedKloter) {
+                $labelsKloter[] = $selectedKloter->nama ?? 'Kloter ' . $selectedKloter->id;
+
+                $pendapatanKloter[] = Transaksi::whereBetween('waktu_transaksi', [
+                        $selectedKloter->tanggal_awal,
+                        $selectedKloter->tanggal_akhir
+                    ])
+                    ->whereNotNull('pemasukan_id')
+                    ->sum('jumlahRp');
+
+                $pengeluaranKloter[] = Transaksi::whereBetween('waktu_transaksi', [
+                        $selectedKloter->tanggal_awal,
+                        $selectedKloter->tanggal_akhir
+                    ])
+                    ->where(function ($q) {
+                        $q->whereNotNull('pengeluaran_id')
+                        ->orWhereNotNull('history_gaji_kloter_id');
+                    })
+                    ->sum('jumlahRp');
+            }
+        }
+
+        $dates = CarbonPeriod::create($start, $end);
+        $labels = [];
+        $pendapatanBulanan = [];
+        $pengeluaranBulanan = [];
+
+        foreach ($dates as $date) {
+            $labels[] = $date->format('d M');
+            $pendapatanBulanan[] = Transaksi::whereDate('waktu_transaksi', $date)
+                ->whereNotNull('pemasukan_id')
+                ->sum('jumlahRp');
+
+            $pengeluaranBulanan[] = Transaksi::whereDate('waktu_transaksi', $date)
+                ->where(function ($q) {
+                    $q->whereNotNull('pengeluaran_id')
+                    ->orWhereNotNull('history_gaji_kloter_id');
+                })
+                ->sum('jumlahRp');
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'pendapatanBulanan' => $pendapatanBulanan,
+            'pengeluaranBulanan' => $pengeluaranBulanan,
+            'labelsKloter' => $labelsKloter,
+            'pendapatanKloter' => $pendapatanKloter,
+            'pengeluaranKloter' => $pengeluaranKloter
+        ]);
+    }
 }
