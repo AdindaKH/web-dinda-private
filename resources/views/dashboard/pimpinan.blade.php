@@ -43,10 +43,10 @@
                         </h2>
                         <form id="date-filter-form" class="flex items-center gap-2" style="padding-top: 10px">
                             <input style="width: fit-content" type="date" name="start_date" id="start_date" 
-                                value="{{ request('start_date', now()->startOfMonth()->toDateString()) }}"
+                                value="{{ request('start_date', $startDate) }}"
                                 class="filter-info border px-2 py-1 rounded text-sm">
                             <input style="width: fit-content" type="date" name="end_date" id="end_date" 
-                                value="{{ request('end_date', now()->endOfMonth()->toDateString()) }}"
+                                value="{{ request('end_date', $endDate) }}"
                                 class="filter-info border px-2 py-1 rounded text-sm">
                         </form>
                     </div>
@@ -144,8 +144,9 @@
     });
 
     // Grafik Kloter
+    let kloterChart;
     const ctxKloter = document.getElementById('kloterChart').getContext('2d');
-    const kloterChart = new Chart(ctxKloter, {
+    kloterChart = new Chart(ctxKloter, {
         type: 'line',
         data: {
             labels: {!! json_encode(array_reverse($labelsKloter)) !!},
@@ -233,10 +234,67 @@
         financeChart.update();
 
         // Update Chart Kloter
-        kloterChart.data.labels = data.labelsKloter.reverse();
-        kloterChart.data.datasets[0].data = data.pendapatanKloter.reverse();
-        kloterChart.data.datasets[1].data = data.pengeluaranKloter.reverse();
-        kloterChart.update();
+        if (kloterChart) {
+            kloterChart.destroy();
+        }
+
+        const kloterId = document.getElementById('kloterFilter').value;
+        const chartType = kloterId ? 'bar' : 'line';
+
+        // Buat ulang chart kloter dengan tipe sesuai filter
+        const ctxKloter = document.getElementById('kloterChart').getContext('2d');
+        kloterChart = new Chart(ctxKloter, {
+            type: chartType,
+            data: {
+                labels: data.labelsKloter.reverse(),
+                datasets: [
+                    {
+                        label: 'Pendapatan',
+                        data: data.pendapatanKloter.reverse(),
+                        borderColor: 'blue',
+                        backgroundColor: 'rgba(0, 123, 255, 0.6)',
+                        fill: chartType === 'bar',
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'blue',
+                        borderWidth: 3,
+                        showLine: chartType === 'line',
+                    },
+                    {
+                        label: 'Pengeluaran',
+                        data: data.pengeluaranKloter.reverse(),
+                        borderColor: 'red',
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        fill: chartType === 'bar',
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'red',
+                        borderWidth: 4,
+                        showLine: chartType === 'line',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                elements: {
+                    line: {
+                        cubicInterpolationMode: 'monotone',
+                    }
+                },
+                spanGaps: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rp ' + value.toLocaleString('id-ID');
+                            }
+                        }
+                    }
+                }
+            }
+        });
     };
 
     const fetchChartData = () => {

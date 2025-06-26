@@ -19,27 +19,157 @@ class DashboardController extends Controller
     // Menampilkan dashboard pimpinan.
     public function pimpinan(Request $request)
     {
-        $currentYear = now()->year;
-        $start = $request->get('start_date')
-            ? Carbon::parse($request->get('start_date'))
-            : Carbon::create($currentYear, 1, 1)->startOfDay();
-        $end = $request->get('end_date')
-            ? Carbon::parse($request->get('end_date'))
-            : Carbon::create($currentYear, 12, 31)->endOfDay();
+        [$start, $end] = $this->getDateRange($request);
+        $kloters = $this->getAllKloters();
+        $kloterData = $this->getKloterChartData($request->get('kloter'), $kloters);
+        $grafikBulanan = $this->getMonthlyChartData($start, $end);
+        $keuangan = $this->getTotalPendapatanPengeluaran($start, $end);
+        $bulanAktif = $start->translatedFormat('d M Y') . ' - ' . $end->translatedFormat('d M Y');
+        $listKloter = HistoryGajiKloter::orderBy('id', 'asc')->get();
 
-        $kloters = HistoryGajiKloter::whereNotNull('tanggal_awal')
+        return view('dashboard.pimpinan', array_merge(
+            $grafikBulanan,
+            ['keuangan' => $keuangan],
+            ['bulanAktif' => $bulanAktif],
+            ['kloters' => $kloters],
+            ['listKloter' => $listKloter],
+            $kloterData,
+            [
+                'startDate' => $start->toDateString(),
+                'endDate' => $end->toDateString()
+            ]
+        ));
+    }
+
+    // fungsi untuk mendapatkan rentang tanggal awal dan akhir
+    protected function getDateRange(Request $request)
+    {
+        $bulan = $request->get('bulan') ?? now()->month;
+        $tahun = $request->get('tahun') ?? now()->year;
+
+        // Ambil transaksi terakhir di bulan dan tahun yang dipilih
+        $lastTransactionDate = Transaksi::whereYear('waktu_transaksi', $tahun)
+            ->whereMonth('waktu_transaksi', $bulan)
+            ->orderBy('waktu_transaksi', 'desc')
+            ->value('waktu_transaksi');
+
+        if ($lastTransactionDate) {
+            $end = Carbon::parse($lastTransactionDate)->endOfDay();
+            $start = $end->copy()->subMonth()->startOfDay();
+        } else {
+            // Jika tidak ada transaksi, gunakan awal dan akhir bulan
+            $start = Carbon::create($tahun, $bulan, 1)->startOfMonth();
+            $end = Carbon::create($tahun, $bulan, 1)->endOfMonth();
+        }
+
+        return [$start, $end];
+    }
+
+
+    // fungsi untuk mendapatkan semua kloter yang memiliki tanggal awal dan akhir
+    protected function getAllKloters()
+    {
+        return HistoryGajiKloter::whereNotNull('tanggal_awal')
             ->whereNotNull('tanggal_akhir')
             ->orderBy('id', 'desc')
             ->get();
+    }
 
-        $kloterId = $request->get('kloter');
+    // fungsi untuk mendapatkan data chart berdasarkan kloter
+    protected function getKloterChartData($kloterId, $kloters)
+    {
+        $labelsKloter = [];
+        $pendapatanKloter = [];
+        $pengeluaranKloter = [];
+
+        $kloterList = $kloterId 
+            ? [$kloters->where('id', $kloterId)->first()] 
+            : $kloters;
+
+        foreach ($kloterList as $kloter) {
+            if (!$kloter) continue;
+
+            $labelsKloter[] = $kloter->nama ?? 'Kloter ' . $kloter->id;
+
+            $pendapatanKloter[] = Transaksi::whereBetween('waktu_transaksi', [
+                    $kloter->tanggal_awal,
+                    $kloter->tanggal_akhir
+                ])
+                ->whereNotNull('pemasukan_id')
+                ->sum('jumlahRp');
+
+            $pengeluaranKloter[] = Transaksi::whereBetween('waktu_transaksi', [
+                    $kloter->tanggal_awal,
+                    $kloter->tanggal_akhir
+                ])
+                ->where(function ($q) {
+                    $q->whereNotNull('pengeluaran_id')
+                    ->orWhereNotNull('history_gaji_kloter_id');
+                })
+                ->sum('jumlahRp');
+        }
+
+        return compact('labelsKloter', 'pendapatanKloter', 'pengeluaranKloter');
+    }
+
+    // fungsi untuk mendapatkan data chart bulanan
+    protected function getMonthlyChartData($start, $end)
+    {
+        $dates = CarbonPeriod::create($start, $end);
+        $labels = [];
+        $pendapatanBulanan = [];
+        $pengeluaranBulanan = [];
+
+        foreach ($dates as $date) {
+            $labels[] = $date->format('d M');
+
+            $pendapatanBulanan[] = Transaksi::whereDate('waktu_transaksi', $date)
+                ->whereNotNull('pemasukan_id')
+                ->sum('jumlahRp');
+
+            $pengeluaranBulanan[] = Transaksi::whereDate('waktu_transaksi', $date)
+                ->where(function ($q) {
+                    $q->whereNotNull('pengeluaran_id')
+                    ->orWhereNotNull('history_gaji_kloter_id');
+                })
+                ->sum('jumlahRp');
+        }
+
+        return compact('labels', 'pendapatanBulanan', 'pengeluaranBulanan');
+    }
+
+    // fungsi untuk mendapatkan total pendapatan dan pengeluaran dalam rentang tanggal
+    protected function getTotalPendapatanPengeluaran($start, $end)
+    {
+        $totalPendapatan = Transaksi::whereBetween('waktu_transaksi', [$start, $end])
+            ->whereNotNull('pemasukan_id')
+            ->sum('jumlahRp');
+
+        $totalPengeluaran = Transaksi::whereBetween('waktu_transaksi', [$start, $end])
+            ->where(function ($q) {
+                $q->whereNotNull('pengeluaran_id')
+                ->orWhereNotNull('history_gaji_kloter_id');
+            })
+            ->sum('jumlahRp');
+
+        return [
+            'pendapatan' => $totalPendapatan,
+            'pengeluaran' => $totalPengeluaran
+        ];
+    }
+
+    public function ajaxData(Request $request)
+    {
+        $start = Carbon::parse($request->get('start_date'))->startOfDay();
+        $end = Carbon::parse($request->get('end_date'))->endOfDay();
+
+        $kloterId = $request->get('kloter_id');
         $labelsKloter = [];
         $pendapatanKloter = [];
         $pengeluaranKloter = [];
 
         if ($kloterId) {
             $selectedKloter = HistoryGajiKloter::find($kloterId);
-
             if ($selectedKloter) {
                 $labelsKloter[] = $selectedKloter->nama ?? 'Kloter ' . $selectedKloter->id;
 
@@ -56,28 +186,7 @@ class DashboardController extends Controller
                     ])
                     ->where(function ($q) {
                         $q->whereNotNull('pengeluaran_id')
-                          ->orWhereNotNull('history_gaji_kloter_id');
-                    })
-                    ->sum('jumlahRp');
-            }
-        } else {
-            foreach ($kloters as $kloter) {
-                $labelsKloter[] = $kloter->nama ?? 'Kloter ' . $kloter->id;
-
-                $pendapatanKloter[] = Transaksi::whereBetween('waktu_transaksi', [
-                        $kloter->tanggal_awal,
-                        $kloter->tanggal_akhir
-                    ])
-                    ->whereNotNull('pemasukan_id')
-                    ->sum('jumlahRp');
-
-                $pengeluaranKloter[] = Transaksi::whereBetween('waktu_transaksi', [
-                        $kloter->tanggal_awal,
-                        $kloter->tanggal_akhir
-                    ])
-                    ->where(function ($q) {
-                        $q->whereNotNull('pengeluaran_id')
-                          ->orWhereNotNull('history_gaji_kloter_id');
+                        ->orWhereNotNull('history_gaji_kloter_id');
                     })
                     ->sum('jumlahRp');
             }
@@ -90,7 +199,6 @@ class DashboardController extends Controller
 
         foreach ($dates as $date) {
             $labels[] = $date->format('d M');
-
             $pendapatanBulanan[] = Transaksi::whereDate('waktu_transaksi', $date)
                 ->whereNotNull('pemasukan_id')
                 ->sum('jumlahRp');
@@ -98,53 +206,21 @@ class DashboardController extends Controller
             $pengeluaranBulanan[] = Transaksi::whereDate('waktu_transaksi', $date)
                 ->where(function ($q) {
                     $q->whereNotNull('pengeluaran_id')
-                      ->orWhereNotNull('history_gaji_kloter_id');
+                    ->orWhereNotNull('history_gaji_kloter_id');
                 })
                 ->sum('jumlahRp');
         }
 
-        $bulanAktif = $start->translatedFormat('d M Y') . ' - ' . $end->translatedFormat('d M Y');
-
-        $totalPendapatan = Transaksi::whereBetween('waktu_transaksi', [$start, $end])
-            ->whereNotNull('pemasukan_id')
-            ->sum('jumlahRp');
-
-        $totalPengeluaran = Transaksi::whereBetween('waktu_transaksi', [$start, $end])
-            ->where(function ($q) {
-                $q->whereNotNull('pengeluaran_id')
-                  ->orWhereNotNull('history_gaji_kloter_id');
-            })
-            ->sum('jumlahRp');
-
-        $keuangan = [
-            'pendapatan' => $totalPendapatan,
-            'pengeluaran' => $totalPengeluaran
-        ];
-
-        /**
-         * Mengambil seluruh data dari tabel HistoryGajiKloter dan mengurutkannya berdasarkan kolom 'id' secara menurun (desc).
-         * 
-         * Fungsi kode ini adalah untuk mendapatkan daftar kloter gaji terbaru terlebih dahulu,
-         * sehingga data yang paling baru akan berada di urutan teratas pada hasil query.
-         *
-         * @var \Illuminate\Database\Eloquent\Collection $listKloter Koleksi data kloter gaji yang telah diurutkan.
-         */
-        $listKloter = HistoryGajiKloter::orderBy('id', 'asc')->get();
-        // $listKloter = HistoryGajiKloter::orderBy('id', 'desc')->get();
-
-        return view('dashboard.pimpinan', compact(
-            'labels',
-            'pendapatanBulanan',
-            'pengeluaranBulanan',
-            'keuangan',
-            'bulanAktif',
-            'kloters',
-            'listKloter',
-            'labelsKloter',
-            'pendapatanKloter',
-            'pengeluaranKloter'
-        ));
+        return response()->json([
+            'labels' => $labels,
+            'pendapatanBulanan' => $pendapatanBulanan,
+            'pengeluaranBulanan' => $pengeluaranBulanan,
+            'labelsKloter' => $labelsKloter,
+            'pendapatanKloter' => $pendapatanKloter,
+            'pengeluaranKloter' => $pengeluaranKloter
+        ]);
     }
+
 
     // Menampilkan dashboard operator
     public function operator()
@@ -228,72 +304,5 @@ class DashboardController extends Controller
         }
     }
 
-    public function ajaxData(Request $request)
-    {
-        // Ambil semua logika seperti di `pimpinan()`
-        $currentYear = now()->year;
-        $start = $request->get('start_date')
-            ? Carbon::parse($request->get('start_date'))
-            : Carbon::create($currentYear, 1, 1)->startOfDay();
-        $end = $request->get('end_date')
-            ? Carbon::parse($request->get('end_date'))
-            : Carbon::create($currentYear, 12, 31)->endOfDay();
-
-        $kloterId = $request->get('kloter');
-        $labelsKloter = [];
-        $pendapatanKloter = [];
-        $pengeluaranKloter = [];
-
-        if ($kloterId) {
-            $selectedKloter = HistoryGajiKloter::find($kloterId);
-            if ($selectedKloter) {
-                $labelsKloter[] = $selectedKloter->nama ?? 'Kloter ' . $selectedKloter->id;
-
-                $pendapatanKloter[] = Transaksi::whereBetween('waktu_transaksi', [
-                        $selectedKloter->tanggal_awal,
-                        $selectedKloter->tanggal_akhir
-                    ])
-                    ->whereNotNull('pemasukan_id')
-                    ->sum('jumlahRp');
-
-                $pengeluaranKloter[] = Transaksi::whereBetween('waktu_transaksi', [
-                        $selectedKloter->tanggal_awal,
-                        $selectedKloter->tanggal_akhir
-                    ])
-                    ->where(function ($q) {
-                        $q->whereNotNull('pengeluaran_id')
-                        ->orWhereNotNull('history_gaji_kloter_id');
-                    })
-                    ->sum('jumlahRp');
-            }
-        }
-
-        $dates = CarbonPeriod::create($start, $end);
-        $labels = [];
-        $pendapatanBulanan = [];
-        $pengeluaranBulanan = [];
-
-        foreach ($dates as $date) {
-            $labels[] = $date->format('d M');
-            $pendapatanBulanan[] = Transaksi::whereDate('waktu_transaksi', $date)
-                ->whereNotNull('pemasukan_id')
-                ->sum('jumlahRp');
-
-            $pengeluaranBulanan[] = Transaksi::whereDate('waktu_transaksi', $date)
-                ->where(function ($q) {
-                    $q->whereNotNull('pengeluaran_id')
-                    ->orWhereNotNull('history_gaji_kloter_id');
-                })
-                ->sum('jumlahRp');
-        }
-
-        return response()->json([
-            'labels' => $labels,
-            'pendapatanBulanan' => $pendapatanBulanan,
-            'pengeluaranBulanan' => $pengeluaranBulanan,
-            'labelsKloter' => $labelsKloter,
-            'pendapatanKloter' => $pendapatanKloter,
-            'pengeluaranKloter' => $pengeluaranKloter
-        ]);
-    }
+    
 }
