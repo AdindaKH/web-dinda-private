@@ -22,22 +22,22 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ url('/register') }}">
+        <form method="POST" action="{{ url('/register') }}" autocomplete="off">
             @csrf
             <div class="mb-4">
-                <input type="text" name="name" class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" placeholder="Nama" required>
+                <input type="text" name="name" autocomplete="off" class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" placeholder="Nama" required>
             </div>
 
             <div class="mb-4">
-                <input type="email" name="email" class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" placeholder="Email" required>
+                <input type="email" name="email" autocomplete="off" class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" placeholder="Email" required>
             </div>
 
             <div class="mb-4">
-                <input type="password" name="password" class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" placeholder="Password" required>
+                <input type="password" name="password" autocomplete="new-password" class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" placeholder="Password" required>
             </div>
 
             <div class="mb-4">
-                <input type="password" name="password_confirmation" class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" placeholder="Konfirmasi Password" required>
+                <input type="password" name="password_confirmation" autocomplete="new-password" class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" placeholder="Konfirmasi Password" required>
             </div>
 
             <div class="mb-4">
@@ -56,7 +56,6 @@
         <div class="text-right mt-1">Kembali ke 
             <a href="{{ route('login') }}" class="text-white underline">login</a>
         </div>
-        
     </div>
 
 </body>

@@ -18,12 +18,13 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}">
+        <form method="POST" action="{{ route('login') }}" autocomplete="off">
             @csrf
             <div class="mb-4">
                 <input 
                     type="email" 
                     name="email" 
+                    autocomplete="off"
                     class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" 
                     placeholder="Email" 
                     required 
@@ -34,14 +35,15 @@
                 <input 
                     type="password" 
                     name="password" 
+                    autocomplete="new-password"
                     class="w-full px-4 py-2 bg-gray-600 text-white rounded focus:outline-none" 
                     placeholder="Password" 
                     required>
-                    <div class="text-right mt-1">Lupa Password?
-                        <a href="{{ route('password.request') }}" class="text-white underline hover:text-gray-200 text-sm">
-                            Reset
-                        </a>
-                    </div>
+                <div class="text-right mt-1">Lupa Password?
+                    <a href="{{ route('password.request') }}" class="text-white underline hover:text-gray-200 text-sm">
+                        Reset
+                    </a>
+                </div>
             </div>
 
             <div>

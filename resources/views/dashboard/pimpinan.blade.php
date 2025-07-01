@@ -131,6 +131,10 @@
             spanGaps: true,
             scales: {
                 y: {
+                    // alasan menggunakan logarithmic: untuk menghindari nilai yang terlalu besar atau kecil yang bisa membuat grafik sulit dibaca
+                    // jika tidak ingin menggunakan logarithmic, bisa dihapus atau diganti dengan type: 'linear',
+                    // jika ingin tetap menggunakan logarithmic, pastikan data tidak mengandung nilai nol atau negatif
+                    // jika ada nilai nol atau negatif, bisa menggunakan filter untuk menghapusnya sebelum membuat grafik
                     type: 'logarithmic',
                     beginAtZero: true,
                     ticks: {
