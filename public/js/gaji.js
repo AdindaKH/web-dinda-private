@@ -80,6 +80,11 @@ document.addEventListener("DOMContentLoaded", function () {
             }).then((result) => {
                 if (result.isConfirmed) {
                     form.submit();
+                    const kloterId = form.getAttribute('data-kloter-id');
+                    const tombolUnduh = document.getElementById(`unduh-kloter-${kloterId}`);
+                    if (tombolUnduh) {
+                        tombolUnduh.style.display = 'inline-block';
+                    }
                 }
             });
         });

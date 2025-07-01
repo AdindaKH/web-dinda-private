@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Slip Gaji Karyawan</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            margin: 40px;
+        }
+        .kop {
+            text-align: center;
+            border-bottom: 2px solid black;
+            margin-bottom: 20px;
+        }
+        .kop h2 {
+            margin: 0;
+        }
+        .info {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        .signature {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
+        .signature div {
+            text-align: center;
+            width: 40%;
+        }
+    </style>
+</head>
+<body>
+    <div class="kop">
+        <h2>UD. DNL PUTRA</h2>
+        <p>KP.Nyamplong, Desa Sumberanyar, Kecamatan Banyuputih, Kabupaten Situbondo <br>Telp: 0812-3913-9713 | Email: info@ud-dnlputra.com</p>
+        <hr>
+    </div>
+
+    <h3 style="text-align:center;">SLIP GAJI KARYAWAN<br>Periode: 07 - 12 Juni 2025</h3>
+
+    <div class="info">
+        <!-- di ganti dengan nama setiap karyawan yang berkerja dalam kloter -->
+        <p>Nama Karyawan: <strong>Jibno</strong></p>
+        <!-- di ganti dengan jenis kelamin setiap karyawan yang berkerja dalam kloter -->
+        <p>Jenis Kelamin: <strong>Laki-laki</strong></p>
+        <!-- di sesuaikan dengan id kloter -->
+        <p>Kloter: <strong>6</strong></p>
+        <!-- di sesuaikan dengan tanggal ini dicetak (now) -->
+        <p>Tanggal Cetak: <strong>25 Juni 2025</strong></p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Tanggal</th>
+                <th>Jam Kerja</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- data diambil dari tanggal yang terhubung dengan kloter yang terhubung dengan karyawan yang bekerja di kloter tersebut -->
+            <tr><td>07-Jun-2025</td><td>13 jam 5 menit</td></tr>
+            <tr><td>08-Jun-2025</td><td>13 jam 5 menit</td></tr>
+            <tr><td>09-Jun-2025</td><td>13 jam 5 menit</td></tr>
+            <tr><td>12-Jun-2025</td><td>0 jam 0 menit</td></tr>
+            <!-- jumlah kan jam nya -->
+            <tr><th>Total</th><th>39 jam 16 menit</th></tr>
+        </tbody>
+    </table>
+
+    <table>
+        <tr>
+            <!-- hitung -->
+            <td>Gaji per Jam</td>
+            <td>Rp2.273</td>
+        </tr>
+        <tr>
+            <!-- hasil penjumlahan jam kerja -->
+            <td>Total Jam Kerja</td>
+            <td>39 jam 16 menit</td>
+        </tr>
+        <tr>
+            <!-- hitung -->
+            <td><strong>Total Gaji</strong></td>
+            <td><strong>Rp89.259</strong></td>
+        </tr>
+    </table>
+
+    <div class="signature">
+        <div>
+            <p>Mengetahui,</p>
+            <br><br><br>
+            <p><strong>Poniman</strong></p>
+        </div>
+        <div>
+            <p>Diterima oleh,</p>
+            <br><br><br>
+            <p><strong>Jibno</strong></p>
+        </div>
+    </div>
+</body>
+</html>

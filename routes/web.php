@@ -97,10 +97,14 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 // Pimpinan
 // Route::middleware(['auth', 'role:pimpinan'])->group(function () {
     Route::get('/pimpinan/dashboard', [DashboardController::class, 'pimpinan'])->name('dashboard.pimpinan');
+    Route::post('/dashboard-pimpinan/data', [DashboardController::class, 'ajaxData'])->name('dashboard.pimpinan.data');
+    
     Route::get('/pimpinan/laporan-barang', [LaporanController::class, 'barang'])->name('laporan.barang');
     Route::get('/pimpinan/laporan-karyawan', [LaporanController::class, 'karyawan'])->name('laporan.karyawan');
     Route::get('/pimpinan/laporan-supplier', [LaporanController::class, 'supplier'])->name('laporan.supplier');
     Route::get('/pimpinan/laporan-transaksi', [LaporanController::class, 'transaksi'])->name('laporan.transaksi');
+
+
 // });
 
 // Operator
@@ -185,9 +189,10 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 
     // export
     Route::get('/gaji/kloter/{id}/export', [GajiController::class, 'export'])->name('gaji.kloter.export');
+    Route::get('/gaji/{kloter}/unduh-slip', [GajiController::class, 'unduhSlipGaji'])->name('gaji.unduh');
+
     Route::get('operator/transaksi/export', [TransaksiController::class, 'exportExcel'])->name('operator.transaksi.export');
     Route::get('/laporan/transaksi/export-pdf', [TransaksiController::class, 'exportPDF'])->name('operator.transaksi.export_pdf');
-
 
 // });
 

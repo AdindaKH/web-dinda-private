@@ -64,11 +64,20 @@
 
                             @if ($isSelesai)
                                 <span class="badge bg-success">Selesai</span>
+                                <a href="{{ route('gaji.unduh', $kloter->id) }}" class="btn btn-success btn-sm mt-1">
+                                    Unduh Slip Gaji
+                                </a>
                             @else
-                                <form action="{{ route('gaji.kloter.selesai', $kloter->id) }}" method="POST" class="d-inline form-kloter-selesai">
+                                <form action="{{ route('gaji.kloter.selesai', $kloter->id) }}" method="POST" class="d-inline form-kloter-selesai" data-kloter-id="{{ $kloter->id }}">
                                     @csrf
                                     <button type="submit" class="btn btn-primary btn-sm">Proses Gaji</button>
                                 </form>
+                                <a href="{{ route('gaji.unduh', $kloter->id) }}"
+                                    class="btn btn-success btn-sm mt-1 btn-unduh-gaji"
+                                    id="unduh-kloter-{{ $kloter->id }}"
+                                    style="display: none;">
+                                    Unduh Slip Gaji
+                                </a>
                             @endif
                         </td>
                     </tr>
