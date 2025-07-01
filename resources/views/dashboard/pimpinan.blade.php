@@ -237,6 +237,12 @@
         financeChart.data.datasets[1].data = data.pengeluaranBulanan;
         financeChart.update();
 
+        // Update DOM Keuangan
+        document.querySelector('.info-box .text-success').textContent = 
+            'Rp ' + data.keuangan.pendapatan.toLocaleString('id-ID');
+        document.querySelector('.info-box .text-danger').textContent = 
+            'Rp ' + data.keuangan.pengeluaran.toLocaleString('id-ID');
+
         // Update Chart Kloter
         if (kloterChart) {
             kloterChart.destroy();

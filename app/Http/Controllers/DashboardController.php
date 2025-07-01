@@ -217,7 +217,8 @@ class DashboardController extends Controller
             'pengeluaranBulanan' => $pengeluaranBulanan,
             'labelsKloter' => $labelsKloter,
             'pendapatanKloter' => $pendapatanKloter,
-            'pengeluaranKloter' => $pengeluaranKloter
+            'pengeluaranKloter' => $pengeluaranKloter,
+            'keuangan' => $this->getTotalPendapatanPengeluaran($start, $end)
         ]);
     }
 
