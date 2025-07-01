@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 
 use Carbon\CarbonPeriod;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 use App\Models\Karyawan;
 use App\Models\Kloter;
@@ -259,4 +260,87 @@ class GajiController extends Controller
 
         return Excel::download(new GajiKloterExport($data, $tanggalUnik), 'detail_gaji_' . $kloter->nama_kloter . '.xlsx');
     }
+
+    public function unduhSlipGaji($id)
+    {
+        $kloter = Kloter::with(['presensis.karyawan', 'tonIkan'])->findOrFail($id);
+
+        $tanggalUnik = $kloter->presensis
+            ->pluck('tanggal')
+            ->unique()
+            ->sort()
+            ->map(fn ($tgl) => Carbon::parse($tgl))
+            ->values();
+
+        $dataKaryawan = $kloter->presensis->groupBy('karyawan_id');
+        $banyakPekerja = $dataKaryawan->count();
+
+        $jumlahTon = $kloter->tonIkan->jumlah_ton ?? 0;
+        $hargaPerTon = $kloter->tonIkan->harga_ikan_per_ton ?? 1000000;
+
+        $gajiPerJamGlobal = $banyakPekerja > 0 ? ($jumlahTon * $hargaPerTon) / $banyakPekerja : 0;
+
+        $slipData = [];
+
+        foreach ($dataKaryawan as $karyawanId => $presensis) {
+            $karyawan = $presensis->first()->karyawan;
+
+            $jamPerTanggal = [];
+            $totalJam = 0;
+
+            foreach ($tanggalUnik as $tanggal) {
+                $presensi  = $presensis->firstWhere('tanggal', $tanggal->toDateString());
+                $jamKerja = 0;
+
+                if ($presensi && $presensi->jam_masuk && $presensi->jam_pulang) {
+                    $jamMasuk = strtotime($presensi->jam_masuk);
+                    $jamPulang = strtotime($presensi->jam_pulang);
+                    $jamKerja = ($jamPulang - $jamMasuk) / 3600;
+                }
+
+                $jamPerTanggal[$tanggal->format('d-M-Y')] = $jamKerja;
+                $totalJam += $jamKerja;
+            }
+
+            $gajiPerJam = $karyawan->jenis_kelamin === 'P'
+                ? $gajiPerJamGlobal * 0.6
+                : $gajiPerJamGlobal;
+
+            $totalGaji = $gajiPerJam * $totalJam;
+
+            $slipData[] = [
+                'karyawan' => $karyawan,
+                'jam_per_tanggal' => $jamPerTanggal,
+                'total_jam' => $totalJam,
+                'gaji_per_jam' => round($gajiPerJam),
+                'total_gaji' => round($totalGaji),
+            ];
+        }
+
+        $tanggalCetak = now()->translatedFormat('d F Y');
+
+        $pdf = Pdf::loadView('operator.gaji.slip', [
+                    'kloter'        => $kloter,
+                    'tanggalCetak'  => $tanggalCetak,
+                    'slipData'      => $slipData,
+                    // bila template butuh periode:
+                    'tanggalMulai'  => Carbon::parse($kloter->tanggal_mulai),
+                    'tanggalAkhir'  => Carbon::parse($kloter->tanggal_akhir),
+                ])
+                ->setPaper('A4', 'portrait');
+
+        // Untuk mengunduh file PDF
+        return $pdf->download('slip_gaji_kloter_'.$kloter->id.'.pdf');
+
+        // Jika ingin menampilkan di browser, gunakan:
+        // return view('operator.gaji.slip', [
+        //     'kloter'        => $kloter,
+        //     'tanggalCetak'  => $tanggalCetak,
+        //     'slipData'      => $slipData,
+        //     // bila template butuh periode:
+        //     'tanggalMulai'  => Carbon::parse($kloter->tanggal_mulai),
+        //     'tanggalAkhir'  => Carbon::parse($kloter->tanggal_akhir),
+        // ]);
+    }
+
 }

@@ -189,6 +189,8 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name
 
     // export
     Route::get('/gaji/kloter/{id}/export', [GajiController::class, 'export'])->name('gaji.kloter.export');
+    Route::get('/gaji/{kloter}/unduh-slip', [GajiController::class, 'unduhSlipGaji'])->name('gaji.unduh');
+
     Route::get('operator/transaksi/export', [TransaksiController::class, 'exportExcel'])->name('operator.transaksi.export');
     Route::get('/laporan/transaksi/export-pdf', [TransaksiController::class, 'exportPDF'])->name('operator.transaksi.export_pdf');
 
