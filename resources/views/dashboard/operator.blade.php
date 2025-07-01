@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <div class="title-box">
-        <h3 class="fw-bold m-0">Dashboard</h3>
+        <h3 class="fw-bold m-0 py-3">Dashboard</h3>
     </div>
 
     <!-- Box Pendapatan -->
